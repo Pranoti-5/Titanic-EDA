@@ -1,0 +1,354 @@
+# Titanic Dataset Exploratory Data Analysis
+
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+
+# Set the style for our plots
+plt.style.use('seaborn-v0_8-whitegrid')
+sns.set_palette("deep")
+plt.rcParams['figure.figsize'] = (12, 8)
+plt.rcParams['font.size'] = 12
+
+# Display all columns in pandas dataframes
+pd.set_option('display.max_columns', None)
+
+# Load the Titanic dataset
+# For this demo, we'll use the built-in datasets from seaborn, but you could use:
+# train_data = pd.read_csv('train.csv')
+titanic_data = sns.load_dataset('titanic')
+
+# Display basic information about the dataset
+print("=== Titanic Dataset Overview ===")
+print(f"Dataset Shape: {titanic_data.shape}")
+print("\nData Types:")
+print(titanic_data.dtypes)
+print("\nFirst 5 Rows:")
+print(titanic_data.head())
+
+# Check for missing values
+print("\n=== Missing Values Analysis ===")
+missing_values = titanic_data.isnull().sum()
+missing_percentage = (missing_values / len(titanic_data)) * 100
+missing_df = pd.DataFrame({
+    'Missing Values': missing_values,
+    'Percentage': missing_percentage.round(2)
+})
+print(missing_df[missing_df['Missing Values'] > 0])
+
+# Create a visualization of missing values
+plt.figure(figsize=(10, 6))
+sns.heatmap(titanic_data.isnull(), cbar=False, cmap='viridis', yticklabels=False)
+plt.title('Missing Values in Titanic Dataset')
+plt.tight_layout()
+plt.savefig('missing_values.png')
+plt.close()
+
+# 1. Survival Rate Analysis
+print("\n=== Survival Rate Analysis ===")
+survival_rate = titanic_data['survived'].mean() * 100
+print(f"Overall survival rate: {survival_rate:.2f}%")
+
+plt.figure(figsize=(8, 6))
+sns.countplot(x='survived', data=titanic_data, palette=['#ff6b6b', '#4ecdc4'])
+plt.title('Survival Distribution')
+plt.xlabel('Survived (0 = No, 1 = Yes)')
+plt.ylabel('Count')
+for i in plt.gca().containers:
+    plt.gca().bar_label(i)
+plt.tight_layout()
+plt.savefig('survival_distribution.png')
+plt.close()
+
+# 2. Survival Rate by Gender
+print("\n=== Gender Analysis ===")
+gender_survival = titanic_data.groupby('sex')['survived'].mean() * 100
+print(gender_survival)
+
+plt.figure(figsize=(8, 6))
+sns.barplot(x='sex', y='survived', data=titanic_data, palette=['#ff9a76', '#67597a'])
+plt.title('Survival Rate by Gender')
+plt.xlabel('Gender')
+plt.ylabel('Survival Rate')
+for i in plt.gca().containers:
+    plt.gca().bar_label(i, fmt='%.2f')
+plt.tight_layout()
+plt.savefig('survival_by_gender.png')
+plt.close()
+
+# 3. Survival Rate by Passenger Class
+print("\n=== Passenger Class Analysis ===")
+class_survival = titanic_data.groupby('pclass')['survived'].mean() * 100
+print(class_survival)
+
+plt.figure(figsize=(10, 6))
+sns.barplot(x='pclass', y='survived', data=titanic_data, palette=['#6a0572', '#ab83a1', '#f7cac9'])
+plt.title('Survival Rate by Passenger Class')
+plt.xlabel('Passenger Class (1 = 1st, 2 = 2nd, 3 = 3rd)')
+plt.ylabel('Survival Rate')
+for i in plt.gca().containers:
+    plt.gca().bar_label(i, fmt='%.2f')
+plt.tight_layout()
+plt.savefig('survival_by_class.png')
+plt.close()
+
+# 4. Age Distribution Analysis
+print("\n=== Age Distribution Analysis ===")
+print(f"Age Statistics:")
+print(titanic_data['age'].describe())
+
+plt.figure(figsize=(12, 6))
+sns.histplot(data=titanic_data, x='age', hue='survived', bins=30, multiple='stack', palette=['#ff6b6b', '#4ecdc4'])
+plt.title('Age Distribution by Survival')
+plt.xlabel('Age')
+plt.ylabel('Count')
+plt.tight_layout()
+plt.savefig('age_distribution.png')
+plt.close()
+
+# 5. Survival Rate by Age Group
+# Create age groups
+titanic_data['age_group'] = pd.cut(titanic_data['age'], bins=[0, 12, 18, 35, 60, 100], 
+                              labels=['Child', 'Teenager', 'Young Adult', 'Adult', 'Senior'])
+
+plt.figure(figsize=(12, 6))
+sns.barplot(x='age_group', y='survived', data=titanic_data.dropna(subset=['age_group']), 
+            palette=sns.color_palette("RdYlGn", 5))
+plt.title('Survival Rate by Age Group')
+plt.xlabel('Age Group')
+plt.ylabel('Survival Rate')
+for i in plt.gca().containers:
+    plt.gca().bar_label(i, fmt='%.2f')
+plt.tight_layout()
+plt.savefig('survival_by_age_group.png')
+plt.close()
+
+# 6. Family Size Analysis
+# Create family size feature
+titanic_data['family_size'] = titanic_data['sibsp'] + titanic_data['parch'] + 1  # +1 for the passenger themselves
+
+print("\n=== Family Size Analysis ===")
+family_survival = titanic_data.groupby('family_size')['survived'].mean().reset_index()
+print(family_survival)
+
+plt.figure(figsize=(12, 6))
+sns.barplot(x='family_size', y='survived', data=titanic_data, palette='coolwarm')
+plt.title('Survival Rate by Family Size')
+plt.xlabel('Family Size')
+plt.ylabel('Survival Rate')
+for i in plt.gca().containers:
+    plt.gca().bar_label(i, fmt='%.2f')
+plt.tight_layout()
+plt.savefig('survival_by_family_size.png')
+plt.close()
+
+# 7. Embarkation Port Analysis
+print("\n=== Embarkation Port Analysis ===")
+port_counts = titanic_data['embark_town'].value_counts()
+print(port_counts)
+
+plt.figure(figsize=(10, 6))
+sns.countplot(x='embark_town', data=titanic_data, palette='viridis')
+plt.title('Passenger Count by Embarkation Port')
+plt.xlabel('Port')
+plt.ylabel('Count')
+for i in plt.gca().containers:
+    plt.gca().bar_label(i)
+plt.tight_layout()
+plt.savefig('passenger_by_port.png')
+plt.close()
+
+plt.figure(figsize=(10, 6))
+sns.barplot(x='embark_town', y='survived', data=titanic_data, palette='magma')
+plt.title('Survival Rate by Embarkation Port')
+plt.xlabel('Port')
+plt.ylabel('Survival Rate')
+for i in plt.gca().containers:
+    plt.gca().bar_label(i, fmt='%.2f')
+plt.tight_layout()
+plt.savefig('survival_by_port.png')
+plt.close()
+
+# 8. Fare Distribution Analysis
+print("\n=== Fare Analysis ===")
+print(titanic_data['fare'].describe())
+
+plt.figure(figsize=(12, 6))
+sns.histplot(data=titanic_data, x='fare', hue='survived', bins=50, kde=True, palette=['#ff6b6b', '#4ecdc4'])
+plt.title('Fare Distribution by Survival')
+plt.xlabel('Fare')
+plt.ylabel('Count')
+plt.xlim(0, 250)  # Limit x-axis for better visualization
+plt.tight_layout()
+plt.savefig('fare_distribution.png')
+plt.close()
+
+# 9. Correlation Analysis
+print("\n=== Correlation Analysis ===")
+# Select numerical columns
+numerical_columns = titanic_data.select_dtypes(include=['float64', 'int64']).columns
+correlation_matrix = titanic_data[numerical_columns].corr()
+print(correlation_matrix['survived'].sort_values(ascending=False))
+
+plt.figure(figsize=(12, 10))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5, fmt='.2f')
+plt.title('Correlation Matrix of Numerical Features')
+plt.tight_layout()
+plt.savefig('correlation_matrix.png')
+plt.close()
+
+# 10. Multivariate Analysis: Age, Class and Gender
+plt.figure(figsize=(15, 6))
+for i, pclass in enumerate([1, 2, 3]):
+    plt.subplot(1, 3, i+1)
+    data = titanic_data[titanic_data['pclass'] == pclass]
+    
+    # Create separate plots for males and females
+    for gender in ['male', 'female']:
+        subdata = data[data['sex'] == gender]
+        survived = subdata[subdata['survived'] == 1]['age']
+        died = subdata[subdata['survived'] == 0]['age']
+        
+        sns.kdeplot(survived, label=f'{gender.capitalize()} Survived', 
+                  shade=True, alpha=0.3)
+        sns.kdeplot(died, label=f'{gender.capitalize()} Died', 
+                  shade=True, alpha=0.3)
+    
+    plt.title(f'Class {pclass}: Age Distributions by Survival and Gender')
+    plt.xlabel('Age')
+    plt.ylabel('Density')
+    plt.legend()
+plt.tight_layout()
+plt.savefig('age_class_gender_survival.png')
+plt.close()
+
+# 11. Simple Predictive Model
+print("\n=== Building a Simple Predictive Model ===")
+
+# Handle missing values and prepare data
+# First, let's drop columns we won't use for our simple model
+model_data = titanic_data.drop(['alive', 'embark_town', 'deck', 'age_group', 'family_size'], axis=1)
+
+# Separate features and target
+X = model_data.drop('survived', axis=1)
+y = model_data['survived']
+
+# Define preprocessing for numeric columns (impute missing values and scale)
+numeric_features = ['age', 'fare']
+numeric_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='median')),
+    ('scaler', StandardScaler())
+])
+
+# Define preprocessing for categorical columns (impute missing values and one-hot encode)
+categorical_features = ['sex', 'embarked', 'class', 'who', 'adult_male']
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))
+])
+
+# Combine preprocessing steps
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_features),
+        ('cat', categorical_transformer, categorical_features)
+    ])
+
+# Create a preprocessing and modeling pipeline
+model_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
+])
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+# Train the model
+model_pipeline.fit(X_train, y_train)
+
+# Make predictions
+y_pred = model_pipeline.predict(X_test)
+
+# Evaluate the model
+print("\nModel Evaluation:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred):.4f}")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# Confusion Matrix Visualization
+plt.figure(figsize=(8, 6))
+cm = confusion_matrix(y_test, y_pred)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False)
+plt.title('Confusion Matrix')
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.tight_layout()
+plt.savefig('confusion_matrix.png')
+plt.close()
+
+# 12. Feature Importance Analysis
+if hasattr(model_pipeline.named_steps['classifier'], 'feature_importances_'):
+    print("\n=== Feature Importance Analysis ===")
+    # Get feature names after preprocessing (this gets complicated with one-hot encoding)
+    feature_names = []
+    
+    # For numeric features (these are unchanged by the scaler)
+    for feature in numeric_features:
+        feature_names.append(feature)
+    
+    # For categorical features (these are one-hot encoded)
+    ohe = model_pipeline.named_steps['preprocessor'].transformers_[1][1].named_steps['onehot']
+    for i, feature in enumerate(categorical_features):
+        categories = ohe.categories_[i]
+        for category in categories:
+            feature_names.append(f"{feature}_{category}")
+    
+    # Get feature importances
+    importances = model_pipeline.named_steps['classifier'].feature_importances_
+    
+    # Create a DataFrame for visualization
+    if len(importances) == len(feature_names):
+        feature_importance_df = pd.DataFrame({
+            'Feature': feature_names,
+            'Importance': importances
+        }).sort_values(by='Importance', ascending=False)
+        
+        # Print top features
+        print("Top 10 important features:")
+        print(feature_importance_df.head(10))
+        
+        # Plot feature importances
+        plt.figure(figsize=(12, 8))
+        sns.barplot(x='Importance', y='Feature', data=feature_importance_df.head(15))
+        plt.title('Feature Importance')
+        plt.tight_layout()
+        plt.savefig('feature_importance.png')
+        plt.close()
+    else:
+        print("Warning: Feature names and importance scores have different lengths.")
+
+# 13. Conclusion
+print("\n=== Conclusion ===")
+print("""
+Key findings from our analysis:
+1. Gender was a strong predictor of survival, with females having a much higher survival rate.
+2. Passenger class significantly affected survival rates, with higher classes having better chances.
+3. Young children had better survival rates compared to other age groups.
+4. Passengers with very small or very large family sizes had lower survival rates.
+5. Fare price correlated with survival, likely due to its relationship with passenger class.
+6. Our simple machine learning model achieved good predictive performance.
+
+This analysis provides valuable insights into the factors that influenced survival on the Titanic.
+These findings align with the "Women and children first" protocol during the disaster.
+""")
+
+print("\nThank you for exploring the Titanic dataset with this analysis!")
