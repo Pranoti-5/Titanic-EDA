@@ -13,13 +13,11 @@ Data Cleaning and Preprocessing:
 Missing value analysis and visualization
 Feature engineering (age groups, family size)
 
-
 Exploratory Data Analysis:
 
 Univariate analysis of passenger demographics
 Bivariate analysis of survival factors
 Multivariate analysis combining key features
-
 
 Data Visualization:
 
@@ -28,15 +26,12 @@ Histograms and KDE plots for distributions
 Heatmaps for correlation analysis
 Custom visualizations to reveal insights
 
-
 Machine Learning:
 
 Random Forest classifier implementation
 Pipeline creation with preprocessing steps
 Model evaluation and performance metrics
 Feature importance analysis
-
-
 
 Key Findings
 
@@ -46,36 +41,3 @@ Young children had better survival prospects compared to adults
 Passengers with mid-sized families (3-4 members) had higher survival rates than those traveling alone or in very large groups
 Fare paid correlated with survival rates, likely due to its relationship with passenger class and accommodation location on the ship
 
-Skills Demonstrated
-
-Data cleaning and handling of missing values
-Exploratory data analysis techniques
-Feature engineering and selection
-Data visualization best practices
-Pipeline construction for machine learning
-Model building and evaluation
-Statistical analysis and interpretation
-
-How to Use This Project
-
-Make sure you have the required libraries installed:
-pip install pandas numpy matplotlib seaborn scikit-learn
-
-Run the main script:
-python titanic_eda.py
-
-Review the generated visualizations and console output to understand the analysis findings
-
-Future Improvements
-
-Implement more advanced feature engineering techniques
-Try additional machine learning algorithms and compare performance
-Create an interactive dashboard for exploration
-Add hypothesis testing to validate key findings
-Enhance visualizations with more detailed annotations
-
-Credits
-
-Dataset: Titanic passenger data from Kaggle/Seaborn
-Analysis and code by: Pranoti
-Jan 2025- in progress
