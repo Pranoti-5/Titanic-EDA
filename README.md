@@ -6,23 +6,6 @@ titanic_eda.py - Main Python script containing all analysis code
 README.md - Project documentation (this file)
 Generated visualizations:
 
-missing_values.png - Visualization of missing data
-survival_distribution.png - Overall survival distribution
-survival_by_gender.png - Survival rates by gender
-survival_by_class.png - Survival rates by passenger class
-age_distribution.png - Age distribution by survival
-survival_by_age_group.png - Survival rates by age group
-survival_by_family_size.png - Survival rates by family size
-passenger_by_port.png - Number of passengers by embarkation port
-survival_by_port.png - Survival rates by embarkation port
-fare_distribution.png - Fare distribution by survival
-correlation_matrix.png - Correlation between numerical features
-age_class_gender_survival.png - Multivariate analysis of age, class, and gender
-confusion_matrix.png - Evaluation of the predictive model
-feature_importance.png - Feature importance in the predictive model
-
-
-
 Key Features
 
 Data Cleaning and Preprocessing:
